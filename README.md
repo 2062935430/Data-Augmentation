@@ -120,59 +120,43 @@ image 参数表示要增广的图像数据，is_training 参数表示当前是�
 
 我将该测试代码与测试图片都放入了use文件夹下，其中增广代码如下：  
 
-    #读取原图
-    import torchvision.transforms as transforms
+    import os
     from PIL import Image
-    img = Image.open('cat01.png')
-    img.show()
-    print('img:',img.size)  
+    from torchvision import transforms  
 
-    #比例缩放
-    img1 = transforms.Resize(112)(img)  # 短边缩放成112，长边按比例缩放
-    img2 = transforms.Resize((112, 112))(img)  # 强行缩放成手动设置的比例
-    img1.show()
-    img2.show()
-    print('img1:', img1.size)
-    print('img2:', img2.size)  
+    # 创建文件夹
+    folder_path = './images'
+    if not os.path.exists(folder_path):
+    os.makedirs(folder_path)  
 
-    #位置截取
-    rand_img = transforms.RandomCrop(112)(img)  # 随机裁剪112*112
-    rand_img.show()
-    print('rand_img:', rand_img.size)
-    center_img = transforms.CenterCrop(112)(img)  # 以原图中心为中心，裁剪112*112
-    center_img.show()
-    print("center_img:", center_img.size)  
+    # 读取图像
+    image = Image.open('cat01.png')  
 
-    #翻转
-    hor_img = transforms.RandomHorizontalFlip(p=1)(img)  # 随机水平翻转, p为概率
-    hor_img.show()
-    ver_img = transforms.RandomVerticalFlip(p=1)(img)  # 随机垂直翻转，p为概率
-    ver_img.show()  
+    # 定义数据增强
+    transform = transforms.Compose([
+    transforms.RandomHorizontalFlip(p=0.5), # 随机水平翻转，概率为50%
+    transforms.RandomApply([transforms.RandomRotation(degrees=10)], p=0.5), # 随机旋转，角度范围为[-10, 10]，概率为50%
+    transforms.RandomApply([transforms.RandomResizedCrop(256, scale=(0.8, 1.0))], p=0.5), # 随机缩放裁切，裁切后尺寸为256，缩放比例范围为[0.8, 1.0]，概率为50%
+    ])  
 
-    #旋转
-    rot_img = transforms.RandomRotation(15)(img)  # 随机在（-15， 15）度旋转
-    rot_img.show()
-    print("rot_img:", rot_img.size)  
-
-    #亮度、对比度和色调的变化
-    bright_img = transforms.ColorJitter(brightness=1)(img)  # 随机从0~2之间的亮度变化
-    bright_img.show()
-    contrast_img = transforms.ColorJitter(contrast=1)(img)  # 随机从0~2之间的对比度
-    contrast_img.show()
-    hue_img = transforms.ColorJitter(hue=0.5)(img)  # 随机从-0.5~0.5之间的色调
-    hue_img.show()
-    saturation_img = transforms.ColorJitter(saturation=0.5)(img)
-    saturation_img.show()
-    color_img = transforms.ColorJitter(brightness=1,contrast=1,hue=0.5,saturation=0.5)(img)
-    color_img.show()  
+    # 应用数据增强并保存图像
+    for i in range(4):
+    transformed_image = transform(image)
+    image_path = os.path.join(folder_path, f'transformed_image_{i}.jpg')
+    transformed_image.save(image_path)  
   
-以下为cat.png经过增广后的效果图：  
-![4](https://user-images.githubusercontent.com/128795948/229270421-1317264b-203c-4bf8-8f2d-b2cb4b9b947b.PNG)
+ ![1](https://user-images.githubusercontent.com/128795948/230037189-4a8e62ea-d7c1-4d9b-8f5a-f51126345352.PNG)
+  
+cat01.png在经过增广后，导出并保存在了images文件夹的路径下：  
 
-![5](https://user-images.githubusercontent.com/128795948/229270426-893978d5-fe2c-491b-9b94-1ea864974a47.PNG)
+ ![2](https://user-images.githubusercontent.com/128795948/230037112-4521c888-1882-4a62-b6bd-17680f262d07.PNG)
 
-![6](https://user-images.githubusercontent.com/128795948/229270429-ff237293-c625-4733-b0e1-dccb48719d4f.PNG)
+（transformed_image文件夹是创建用于存储训练中图像的文件夹）  
 
-但是该代码并没有能将完成增广后的数据直接导入特定文件夹的部分
+ ![3](https://user-images.githubusercontent.com/128795948/230037533-a5845344-a94e-4ec6-a51f-e6c3577d8a7a.PNG)  
+
+该代码中加入了循环部分，可以通过调整参数进行多次的数据增广操作  
+
+如上我在循环部分设置循环次数为4时，最后项目导出了经过四次循环增广的图像产物  
 
 ——————————————————————————————————————————————————————————————————————————————————————————————————————
